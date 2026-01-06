@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interval Timer</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    text-align: center;
+  }
+
+  .interval {
+    font-size: 18px;
+    opacity: 0.7;
+  }
+
+  .time {
+    font-size: 96px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="interval" id="intervalLabel">17 segundos</div>
+    <div class="time" id="time">17</div>
+  </div>
+
+<script>
+  const intervals = [17, 43];
+  let index = 0;
+  let timeRemaining = intervals[index];
+
+  const timeEl = document.getElementById("time");
+  const labelEl = document.getElementById("intervalLabel");
+
+  function updateUI() {
+    timeEl.textContent = timeRemaining;
+    labelEl.textContent = intervals[index] + " segundos";
+  }
+
+  setInterval(() => {
+    timeRemaining--;
+
+    if (timeRemaining < 0) {
+      index = (index + 1) % intervals.length;
+      timeRemaining = intervals[index];
+    }
+
+    updateUI();
+  }, 1000);
+</script>
+</body>
+</html>

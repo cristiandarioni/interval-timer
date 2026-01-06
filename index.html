@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Interval Timer</title>
 
 <style>
@@ -19,6 +19,7 @@
 
   .container {
     text-align: center;
+    width: 100%;
   }
 
   .interval {
@@ -29,21 +30,52 @@
   .time {
     font-size: 96px;
     font-weight: bold;
-    margin-top: 10px;
+    margin: 20px 0;
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  button {
+    padding: 14px 18px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .start { background: #2ecc71; }
+  .pause { background: #f1c40f; }
+  .reset { background: #e74c3c; }
+
+  button:active {
+    transform: scale(0.96);
   }
 </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="interval" id="intervalLabel">17 segundos</div>
-    <div class="time" id="time">17</div>
+
+<div class="container">
+  <div class="interval" id="intervalLabel">Listo</div>
+  <div class="time" id="time">17</div>
+
+  <div class="buttons">
+    <button class="start" onclick="startTimer()">Iniciar</button>
+    <button class="pause" onclick="pauseTimer()">Pausar</button>
+    <button class="reset" onclick="resetTimer()">Reiniciar</button>
   </div>
+</div>
 
 <script>
   const intervals = [17, 43];
   let index = 0;
   let timeRemaining = intervals[index];
+  let timer = null;
+  let running = false;
 
   const timeEl = document.getElementById("time");
   const labelEl = document.getElementById("intervalLabel");
@@ -51,18 +83,60 @@
   function updateUI() {
     timeEl.textContent = timeRemaining;
     labelEl.textContent = intervals[index] + " segundos";
+
+    // Colores según intervalo
+    document.body.style.background =
+      intervals[index] === 17 ? "#0a1a2f" : "#2a0a1f";
   }
 
-  setInterval(() => {
+  function vibrateAndBeep() {
+    // Vibración
+    if (navigator.vibrate) {
+      navigator.vibrate(200);
+    }
+
+    // Sonido simple
+    const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=");
+    audio.play();
+  }
+
+  function tick() {
+    if (!running) return;
+
     timeRemaining--;
 
     if (timeRemaining < 0) {
       index = (index + 1) % intervals.length;
       timeRemaining = intervals[index];
+      vibrateAndBeep();
     }
 
     updateUI();
-  }, 1000);
+  }
+
+  function startTimer() {
+    if (running) return;
+
+    running = true;
+    updateUI();
+    timer = setInterval(tick, 1000);
+  }
+
+  function pauseTimer() {
+    running = false;
+    clearInterval(timer);
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    index = 0;
+    timeRemaining = intervals[index];
+    labelEl.textContent = "Reiniciado";
+    updateUI();
+  }
+
+  updateUI();
 </script>
+
 </body>
 </html>

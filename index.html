@@ -17,26 +17,24 @@
     align-items: center;
   }
 
-  .container {
-    text-align: center;
+  .screen {
+    display: none;
     width: 100%;
+    text-align: center;
   }
 
-  .interval {
-    font-size: 18px;
-    opacity: 0.7;
+  .active {
+    display: block;
   }
 
-  .time {
-    font-size: 96px;
-    font-weight: bold;
-    margin: 20px 0;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
+  input {
+    padding: 12px;
+    margin: 8px;
+    font-size: 16px;
+    width: 140px;
+    border-radius: 8px;
+    border: none;
+    text-align: center;
   }
 
   button {
@@ -44,6 +42,7 @@
     font-size: 16px;
     border: none;
     border-radius: 10px;
+    margin: 8px;
     cursor: pointer;
   }
 
@@ -51,53 +50,81 @@
   .pause { background: #f1c40f; }
   .reset { background: #e74c3c; }
 
-  button:active {
-    transform: scale(0.96);
+  .label {
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .time {
+    font-size: 90px;
+    font-weight: bold;
+    margin: 20px 0;
+  }
+
+  .cycle {
+    opacity: 0.7;
+    margin-bottom: 20px;
   }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <div class="interval" id="intervalLabel">Listo</div>
-  <div class="time" id="time">17</div>
+<!-- PANTALLA INICIAL -->
+<div id="setupScreen" class="screen active">
+  <h2>Configurar Ciclos</h2>
 
-  <div class="buttons">
-    <button class="start" onclick="startTimer()">Iniciar</button>
-    <button class="pause" onclick="pauseTimer()">Pausar</button>
-    <button class="reset" onclick="resetTimer()">Reiniciar</button>
-  </div>
+  <input id="shortInput" type="number" placeholder="Retorno (s)" value="17"><br>
+  <input id="longInput" type="number" placeholder="Extracción (s)" value="43"><br>
+  <input id="cyclesInput" type="number" placeholder="Ciclos" value="6"><br>
+
+  <button class="start" onclick="startSession()">Comenzar</button>
+</div>
+
+<!-- PANTALLA TIMER -->
+<div id="timerScreen" class="screen">
+  <div class="label" id="phaseLabel">RETORNO</div>
+  <div class="time" id="time">0</div>
+  <div class="cycle" id="cycleLabel">Ciclo 1</div>
+
+  <button class="pause" onclick="pauseTimer()">Pausar</button>
+  <button class="reset" onclick="resetAll()">Reiniciar</button>
 </div>
 
 <script>
-  const intervals = [17, 43];
-  let index = 0;
-  let timeRemaining = intervals[index];
-  let timer = null;
+  let shortTime = 17;
+  let longTime = 43;
+  let totalCycles = 1;
+
+  let currentPhase = "short"; // short / long
+  let timeRemaining = 0;
+  let currentCycle = 1;
   let running = false;
+  let timer = null;
+
+  const setupScreen = document.getElementById("setupScreen");
+  const timerScreen = document.getElementById("timerScreen");
 
   const timeEl = document.getElementById("time");
-  const labelEl = document.getElementById("intervalLabel");
+  const phaseEl = document.getElementById("phaseLabel");
+  const cycleEl = document.getElementById("cycleLabel");
 
-  function updateUI() {
-    timeEl.textContent = timeRemaining;
-    labelEl.textContent = intervals[index] + " segundos";
+  function startSession() {
+    shortTime = parseInt(document.getElementById("shortInput").value);
+    longTime = parseInt(document.getElementById("longInput").value);
+    totalCycles = parseInt(document.getElementById("cyclesInput").value);
 
-    // Colores según intervalo
-    document.body.style.background =
-      intervals[index] === 17 ? "#0a1a2f" : "#2a0a1f";
-  }
+    currentPhase = "short";
+    timeRemaining = shortTime;
+    currentCycle = 1;
 
-  function vibrateAndBeep() {
-    // Vibración
-    if (navigator.vibrate) {
-      navigator.vibrate(200);
-    }
+    setupScreen.classList.remove("active");
+    timerScreen.classList.add("active");
 
-    // Sonido simple
-    const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=");
-    audio.play();
+    updateUI();
+    running = true;
+    timer = setInterval(tick, 1000);
   }
 
   function tick() {
@@ -106,36 +133,54 @@
     timeRemaining--;
 
     if (timeRemaining < 0) {
-      index = (index + 1) % intervals.length;
-      timeRemaining = intervals[index];
-      vibrateAndBeep();
+      if (currentPhase === "short") {
+        currentPhase = "long";
+        timeRemaining = longTime;
+      } else {
+        currentCycle++;
+        if (currentCycle > totalCycles) {
+          finishSession();
+          return;
+        }
+        currentPhase = "short";
+        timeRemaining = shortTime;
+      }
+      vibrate();
     }
 
     updateUI();
   }
 
-  function startTimer() {
-    if (running) return;
+  function updateUI() {
+    timeEl.textContent = timeRemaining;
+    phaseEl.textContent = currentPhase === "short" ? "RETORNO" : "EXTRACCIÓN";
+    cycleEl.textContent = `Ciclo ${currentCycle} de ${totalCycles}`;
 
-    running = true;
-    updateUI();
-    timer = setInterval(tick, 1000);
+    document.body.style.background =
+      currentPhase === "short" ? "#0a1a2f" : "#2a0a1f";
   }
 
   function pauseTimer() {
-    running = false;
+    running = !running;
+  }
+
+  function resetAll() {
     clearInterval(timer);
+    running = false;
+    setupScreen.classList.add("active");
+    timerScreen.classList.remove("active");
   }
 
-  function resetTimer() {
-    pauseTimer();
-    index = 0;
-    timeRemaining = intervals[index];
-    labelEl.textContent = "Reiniciado";
-    updateUI();
+  function finishSession() {
+    clearInterval(timer);
+    phaseEl.textContent = "FINALIZADO";
+    running = false;
+    vibrate();
   }
 
-  updateUI();
+  function vibrate() {
+    if (navigator.vibrate) navigator.vibrate(200);
+  }
 </script>
 
 </body>

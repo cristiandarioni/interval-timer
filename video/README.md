@@ -31,6 +31,17 @@ Si prefieres hacerlo a mano:
 
 Y después, dentro de `video/`: `npm install`.
 
+### Windows: error "la ejecución de scripts está deshabilitada"
+
+Si al escribir `npm run ...` en PowerShell sale ese error, ejecuta una sola vez:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+Responde `S` (o `Y`) si pregunta, y vuelve a probar. Alternativa sin cambiar nada: usa `npm.cmd` en lugar de `npm`
+(por ejemplo `npm.cmd run render`).
+
 ## Uso
 
 | Comando | Qué hace |
